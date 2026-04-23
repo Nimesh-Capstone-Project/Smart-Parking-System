@@ -29,7 +29,7 @@ body {
 }
 
 .muted-copy {
-  @apply text-sm text-slate;
+  @apply text-sm text-slate-500;
 }
 
 .input-shell {
