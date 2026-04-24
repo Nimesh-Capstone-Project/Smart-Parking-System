@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: notification-container
-          image: nimeshsv814/notification-service:latest
+          image: nimeshsv814/notification-service:v1.0.0
           ports:
             - containerPort: 4006
           envFrom:

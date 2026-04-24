@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: frontend-container
-          image: nimeshsv814/frontend-service:latest
+          image: nimeshsv814/frontend-service:v1.0.0
           ports:
             - containerPort: 5173
           envFrom:

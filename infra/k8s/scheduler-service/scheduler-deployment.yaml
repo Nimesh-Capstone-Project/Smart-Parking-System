@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: scheduler-container
-          image: nimeshsv814/scheduler-service:latest
+          image: nimeshsv814/scheduler-service:v1.0.0
           ports:
             - containerPort: 4005
           envFrom:

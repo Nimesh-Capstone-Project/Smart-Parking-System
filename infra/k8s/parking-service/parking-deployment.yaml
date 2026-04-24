@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: parking-container
-          image: nimeshsv814/parking-service:latest
+          image: nimeshsv814/parking-service:v1.0.0
           ports:
             - containerPort: 4002
           envFrom:

@@ -4,9 +4,9 @@ metadata:
   name: notification-configmap
   namespace: sps-ns
 data:
-  PORT: 4006
-  MONGO_URI: mongodb://mongo-svc:27017/notificationdb
-  JWT_SECRET: smartparking_super_secret
-  CORS_ORIGIN: *
-  INTERNAL_API_KEY: smartparking_internal_key
+  PORT: "4006"
+  MONGO_URI: "mongodb://mongo-svc:27017/notificationdb"
+  JWT_SECRET: "smartparking_super_secret"
+  CORS_ORIGIN: "*"
+  INTERNAL_API_KEY: "smartparking_internal_key"
 

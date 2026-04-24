@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: booking-container
-          image: nimeshsv814/booking-service:latest
+          image: nimeshsv814/booking-service:v1.0.0
           ports:
             - containerPort: 4003
           envFrom:
