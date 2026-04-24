@@ -7,6 +7,6 @@ spec:
   selector:
     app: sps-scheduler
   ports:
-    - port: 4005
+    - port: 80
       targetPort: 4005
   type: ClusterIP

@@ -7,6 +7,6 @@ spec:
   selector:
     app: sps-auth
   ports:
-    - port: 4001
+    - port: 80
       targetPort: 4001
   type: ClusterIP

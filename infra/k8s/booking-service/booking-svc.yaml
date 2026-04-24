@@ -7,6 +7,6 @@ spec:
   selector:
     app: sps-booking
   ports:
-    - port: 4003
+    - port: 80
       targetPort: 4003
   type: ClusterIP

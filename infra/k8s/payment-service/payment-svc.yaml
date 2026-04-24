@@ -7,6 +7,6 @@ spec:
   selector:
     app: sps-payment
   ports:
-    - port: 4004
+    - port: 80
       targetPort: 4004
   type: ClusterIP

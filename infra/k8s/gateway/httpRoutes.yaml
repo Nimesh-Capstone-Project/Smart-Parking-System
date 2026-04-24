@@ -20,7 +20,7 @@ spec:
               replacePrefixMatch: /
       backendRefs:
         - name: auth-service
-          port: 4001
+          port: 80
     - matches:
         - path:
             type: PathPrefix
@@ -33,7 +33,7 @@ spec:
               replacePrefixMatch: /
       backendRefs:
         - name: parking-svc
-          port: 4002
+          port: 80
     - matches:
         - path:
             type: PathPrefix
@@ -46,7 +46,7 @@ spec:
               replacePrefixMatch: /
       backendRefs:
         - name: booking-service
-          port: 4003
+          port: 80
     - matches:
         - path:
             type: PathPrefix
@@ -59,7 +59,7 @@ spec:
               replacePrefixMatch: /
       backendRefs:
         - name: payment-svc
-          port: 4004
+          port: 80
     - matches:
         - path:
             type: PathPrefix
@@ -72,7 +72,7 @@ spec:
               replacePrefixMatch: /
       backendRefs:
         - name: notification-svc
-          port: 4006
+          port: 80
     - matches:
         - path:
             type: PathPrefix
