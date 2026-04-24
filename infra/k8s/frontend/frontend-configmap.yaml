@@ -4,11 +4,11 @@ metadata:
   name: frontend-configmap
   namespace: sps-ns
 data:
-  VITE_AUTH_SERVICE_URL: "http://auth-service:4001/auth"
-  VITE_PARKING_SERVICE_URL: "http://parking-service:4002/parking"
-  VITE_BOOKING_SERVICE_URL: "http://booking-service:4003/booking"
-  VITE_PAYMENT_SERVICE_URL: "http://payment-service:4004/payment"
-  VITE_NOTIFICATION_SERVICE_URL: "http://notification-service:4006/notification"
+  VITE_AUTH_SERVICE_URL: "http://auth-service:4001"
+  VITE_PARKING_SERVICE_URL: "http://parking-service:4002"
+  VITE_BOOKING_SERVICE_URL: "http://booking-service:4003"
+  VITE_PAYMENT_SERVICE_URL: "http://payment-service:4004"
+  VITE_NOTIFICATION_SERVICE_URL: "http://notification-service:4006"
   VITE_RAZORPAY_KEY_ID: "rzp_test_ShFFMxa9JkqmZu"
 
 
