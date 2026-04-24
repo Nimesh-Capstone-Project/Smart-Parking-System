@@ -9,7 +9,7 @@ services:
       - mongo_data:/data/db
 
   auth-service:
-    build: ./services/auth-service
+    build: ./auth-service
     container_name: auth-service
     env_file:
       - ./services/auth-service/.env
@@ -19,7 +19,7 @@ services:
       - "4001:4001"
 
   parking-service:
-    build: ./services/parking-service
+    build: ./parking-service
     container_name: parking-service
     env_file:
       - ./services/parking-service/.env
@@ -29,7 +29,7 @@ services:
       - "4002:4002"
 
   booking-service:
-    build: ./services/booking-service
+    build: ./booking-service
     container_name: booking-service
     env_file:
       - ./services/booking-service/.env
@@ -41,7 +41,7 @@ services:
       - "4003:4003"
 
   payment-service:
-    build: ./services/payment-service
+    build: ./payment-service
     container_name: payment-service
     env_file:
       - ./services/payment-service/.env
@@ -53,7 +53,7 @@ services:
       - "4004:4004"
 
   scheduler-service:
-    build: ./services/scheduler-service
+    build: ./scheduler-service
     container_name: scheduler-service
     env_file:
       - ./services/scheduler-service/.env
@@ -63,7 +63,7 @@ services:
       - "4005:4005"
 
   notification-service:
-    build: ./services/notification-service
+    build: ./notification-service
     container_name: notification-service
     env_file:
       - ./services/notification-service/.env
