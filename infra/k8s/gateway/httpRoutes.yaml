@@ -32,7 +32,7 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: parking-svc
+        - name: parking-service
           port: 80
     - matches:
         - path:
@@ -58,7 +58,7 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: payment-svc
+        - name: payment-service
           port: 80
     - matches:
         - path:
@@ -71,7 +71,7 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: notification-svc
+        - name: notification-service
           port: 80
     - matches:
         - path:

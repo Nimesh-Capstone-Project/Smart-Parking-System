@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: parking-svc
+  name: parking-service
   namespace: sps-ns
 spec:
   selector:
