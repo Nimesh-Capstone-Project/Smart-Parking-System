@@ -6,6 +6,7 @@ const { bookingClient, internalHeaders, notificationClient } = require("../confi
 const buildPaymentId = () => `PAY-${Date.now()}${Math.floor(Math.random() * 1000)}`;
 const buildTransactionRef = () => `TXN-${Date.now()}${Math.floor(Math.random() * 10000)}`;
 const getTrimmedEnv = (name) => (process.env[name] || "").trim();
+const normalizeAmount = (value) => Number(Number(value || 0).toFixed(2));
 const buildPaymentSummary = (booking) => ({
   bookingId: booking.bookingId,
   slotId: booking.slotId,
@@ -73,6 +74,19 @@ const sendPaymentNotification = async ({ booking, payment, type, message }) => {
   });
 };
 
+const finalizeConfirmedBooking = async (bookingId, booking) => {
+  if (booking.status !== "pending") {
+    return booking;
+  }
+
+  const confirmResponse = await bookingClient.post(
+    `/internal/bookings/${bookingId}/confirm`,
+    {},
+    { headers: internalHeaders() }
+  );
+  return confirmResponse.data.booking;
+};
+
 const markPaymentFailed = async ({ booking, orderId = null, errorMessage = "Payment failed", paymentId = null }) => {
   let payment = null;
 
@@ -82,6 +96,14 @@ const markPaymentFailed = async ({ booking, orderId = null, errorMessage = "Paym
 
   if (!payment && orderId) {
     payment = await Payment.findOne({ bookingId: booking.bookingId, orderId }).sort({ createdAt: -1 });
+  }
+
+  if (payment?.status === "success" || booking.status === "confirmed") {
+    return { payment, booking, skipped: true };
+  }
+
+  if (booking.status !== "pending") {
+    return { payment, booking, skipped: true };
   }
 
   if (!payment) {
@@ -113,7 +135,7 @@ const markPaymentFailed = async ({ booking, orderId = null, errorMessage = "Paym
     message: `${errorMessage} for booking ${booking.bookingId}.`,
   });
 
-  return { payment, booking: cancelledBooking };
+  return { payment, booking: cancelledBooking, skipped: false };
 };
 
 const createOrder = async (req, res) => {
@@ -139,12 +161,12 @@ const createOrder = async (req, res) => {
     }
 
     const summary = buildPaymentSummary(booking);
-    const expectedAmount = Number(summary.totalAmount);
+    const expectedAmount = normalizeAmount(summary.totalAmount);
     if (Number.isNaN(expectedAmount) || expectedAmount <= 0) {
       return res.status(400).json({ message: "Invalid booking amount" });
     }
 
-    if (amount !== undefined && Number(amount) !== expectedAmount) {
+    if (amount !== undefined && normalizeAmount(amount) !== expectedAmount) {
       return res.status(400).json({ message: "Amount mismatch for this booking" });
     }
 
@@ -208,6 +230,17 @@ const verifyPayment = async (req, res) => {
       return res.status(error.status).json({ message: error.message });
     }
 
+    let payment = await Payment.findOne({ bookingId, orderId: razorpay_order_id }).sort({ createdAt: -1 });
+    if (payment?.status === "success") {
+      const confirmedBooking = await finalizeConfirmedBooking(bookingId, booking);
+      return res.json({
+        message: "Payment already verified",
+        payment,
+        booking: confirmedBooking,
+        summary: buildPaymentSummary(confirmedBooking),
+      });
+    }
+
     const razorpayKeySecret = getTrimmedEnv("RAZORPAY_KEY_SECRET");
     if (!razorpayKeySecret) {
       return res.status(500).json({ message: "Razorpay credentials are not configured" });
@@ -231,7 +264,6 @@ const verifyPayment = async (req, res) => {
       });
     }
 
-    let payment = await Payment.findOne({ bookingId, orderId: razorpay_order_id }).sort({ createdAt: -1 });
     if (!payment) {
       payment = new Payment({
         paymentId: buildPaymentId(),
@@ -256,18 +288,10 @@ const verifyPayment = async (req, res) => {
     payment.transactionRef = razorpay_payment_id;
     await payment.save();
 
-    let confirmedBooking = booking;
-    if (booking.status === "pending") {
-      const confirmResponse = await bookingClient.post(
-        `/internal/bookings/${bookingId}/confirm`,
-        {},
-        { headers: internalHeaders() }
-      );
-      confirmedBooking = confirmResponse.data.booking;
-    }
+    const confirmedBooking = await finalizeConfirmedBooking(bookingId, booking);
 
     await sendPaymentNotification({
-      booking,
+      booking: confirmedBooking,
       payment,
       type: "payment_success",
       message: `Payment successful for booking ${bookingId}.`,
@@ -277,7 +301,7 @@ const verifyPayment = async (req, res) => {
       message: "Payment verified successfully",
       payment,
       booking: confirmedBooking,
-      summary: buildPaymentSummary(booking),
+      summary: buildPaymentSummary(confirmedBooking),
     });
   } catch (error) {
     return res.status(500).json({
@@ -305,8 +329,8 @@ const failPayment = async (req, res) => {
       errorMessage: reason,
     });
 
-    return res.status(400).json({
-      message: "Payment failed",
+    return res.json({
+      message: failedResult.skipped ? "Payment state already finalized" : "Payment failed",
       payment: failedResult.payment,
       booking: failedResult.booking,
     });

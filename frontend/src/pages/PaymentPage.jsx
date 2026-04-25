@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { bookingApi, getApiError, parkingApi, paymentApi } from "../api/client";
 import { Loader } from "../components/Loader";
@@ -29,6 +29,8 @@ export const PaymentPage = () => {
   const [vehicleType, setVehicleType] = useState("2-wheeler");
   const [startTime, setStartTime] = useState(() => toLocalDateTimeValue(new Date(Date.now() + 60 * 60 * 1000)));
   const [durationHours, setDurationHours] = useState("1");
+  const paymentCompletedRef = useRef(false);
+  const failureHandledRef = useRef(false);
 
   const vehicleOptions = [
     { value: "2-wheeler", label: "2-Wheeler", rate: slot?.pricing?.twoWheeler ?? 0 },
@@ -81,9 +83,13 @@ export const PaymentPage = () => {
     let redirectToBookings = Boolean(bookingId);
     let activeBookingId = bookingId;
     let activeBooking = booking;
+    let createdBookingThisRun = false;
+    let orderId = null;
 
     try {
       setProcessing(true);
+      paymentCompletedRef.current = false;
+      failureHandledRef.current = false;
 
       if (!activeBookingId) {
         const parsedStart = new Date(startTime);
@@ -115,11 +121,43 @@ export const PaymentPage = () => {
         activeBooking = bookingResponse.data.booking;
         setBooking(activeBooking);
         redirectToBookings = true;
+        createdBookingThisRun = true;
       }
+
+      const reportFailedPayment = async ({ reason, description }) => {
+        if (!activeBookingId || paymentCompletedRef.current || failureHandledRef.current) {
+          return;
+        }
+
+        failureHandledRef.current = true;
+
+        try {
+          await paymentApi.post("/payments/fail", {
+            bookingId: activeBookingId,
+            razorpay_order_id: orderId,
+            reason,
+          });
+        } catch (_error) {
+          // Ignore fail-report errors to avoid masking the primary checkout issue.
+        }
+
+        pushToast({
+          title: "Payment failed",
+          description,
+          tone: "error",
+        });
+        navigate("/bookings");
+      };
 
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
         alert("Razorpay SDK failed to load");
+        if (createdBookingThisRun) {
+          await reportFailedPayment({
+            reason: "Razorpay SDK failed to load",
+            description: "Checkout could not be started because Razorpay failed to load.",
+          });
+        }
         setProcessing(false);
         return;
       }
@@ -127,6 +165,12 @@ export const PaymentPage = () => {
       if (!window.Razorpay) {
         console.log("Razorpay Loaded:", !!window.Razorpay);
         alert("Razorpay not loaded");
+        if (createdBookingThisRun) {
+          await reportFailedPayment({
+            reason: "Razorpay not loaded",
+            description: "Checkout could not be started because Razorpay was unavailable.",
+          });
+        }
         setProcessing(false);
         return;
       }
@@ -136,6 +180,7 @@ export const PaymentPage = () => {
         amount: activeBooking?.totalAmount ?? activeBooking?.amount ?? calculatedAmount,
       });
       const orderData = orderResponse.data;
+      orderId = orderData.orderId;
 
       console.log("Order Response:", orderData);
       console.log("Razorpay Loaded:", !!window.Razorpay);
@@ -182,20 +227,17 @@ export const PaymentPage = () => {
         },
         modal: {
           ondismiss: async () => {
-            try {
-              await paymentApi.post("/payments/fail", {
-                bookingId: activeBookingId,
-                razorpay_order_id: orderData.orderId,
+            if (!paymentCompletedRef.current && !failureHandledRef.current) {
+              await reportFailedPayment({
                 reason: "Payment cancelled",
+                description: "Payment checkout was closed before completion.",
               });
-            } catch (_error) {
-              // Let the scheduler clean up if cancellation request fails.
-            } finally {
-              setProcessing(false);
             }
+            setProcessing(false);
           },
         },
         handler: async function (response) {
+          paymentCompletedRef.current = true;
           try {
             await verifyPayment(response);
           } catch (error) {
@@ -209,26 +251,23 @@ export const PaymentPage = () => {
 
       const razorpay = new window.Razorpay(options);
       razorpay.on("payment.failed", async (response) => {
-        try {
-          await paymentApi.post("/payments/fail", {
-            bookingId: activeBookingId,
-            razorpay_order_id: orderData.orderId,
-            reason: response.error?.description || "Payment failed",
-          });
-        } catch (_error) {
-          // Let the scheduler clean up if cancellation request fails.
-        }
-
-        pushToast({
-          title: "Payment failed",
+        await reportFailedPayment({
+          reason: response.error?.description || "Payment failed",
           description: response.error?.description || "Razorpay payment could not be completed.",
-          tone: "error",
         });
         setProcessing(false);
-        navigate("/bookings");
       });
       razorpay.open();
     } catch (error) {
+      if (createdBookingThisRun && !paymentCompletedRef.current && !failureHandledRef.current) {
+        await paymentApi
+          .post("/payments/fail", {
+            bookingId: activeBookingId,
+            razorpay_order_id: orderId,
+            reason: "Payment initiation failed",
+          })
+          .catch(() => {});
+      }
       setProcessing(false);
       pushToast({ title: "Payment result", description: getApiError(error), tone: "error" });
       if (redirectToBookings) {
