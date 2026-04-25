@@ -1,3 +1,3 @@
 {{- if .Values.bookingService.enabled }}
-{{ include "smart-parking.renderDeployment" (dict "root" . "deployment" .Values.bookingService.deployment) }}
+{{ include "smart-parking.renderDeployment" (dict "root" . "deployment" .Values.bookingService.deployment "service" .Values.bookingService.service) }}
 {{- end }}

@@ -39,6 +39,7 @@ data:
 {{- define "smart-parking.renderDeployment" -}}
 {{- $root := .root -}}
 {{- $deployment := .deployment -}}
+{{- $service := default dict .service -}}
 {{- $deploymentStrategy := default dict $deployment.strategy -}}
 {{- $rollingUpdate := default dict $deploymentStrategy.rollingUpdate -}}
 {{- $rolloutEnabled := and $root.Values.rollout $root.Values.rollout.enabled -}}
@@ -60,11 +61,10 @@ spec:
 {{ toYaml $deployment.selectorLabels | nindent 6 }}
 {{- if $rolloutEnabled }}
   strategy:
-    canary:
-      maxSurge: {{ default 1 $rollingUpdate.maxSurge }}
-      maxUnavailable: {{ default 1 $rollingUpdate.maxUnavailable }}
-      steps:
-{{ $rolloutSteps | nindent 8 }}
+    blueGreen:
+      activeService: {{ $service.name }}
+      previewService: {{ printf "%s-preview" $service.name }}
+      autoPromotionEnabled: false
 {{- else if $deployment.strategy }}
   strategy:
 {{ toYaml $deployment.strategy | nindent 4 }}
@@ -124,6 +124,40 @@ spec:
   type: {{ $service.type }}
 {{- if hasKey $service "clusterIP" }}
   clusterIP: {{ $service.clusterIP }}
+{{- end }}
+{{- end -}}
+
+{{- define "smart-parking.renderPreviewService" -}}
+{{- $root := .root -}}
+{{- $service := .service -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s-preview" $service.name }}
+  namespace: {{ include "smart-parking.namespace" $root }}
+spec:
+  selector:
+{{ toYaml $service.selectorLabels | nindent 4 }}
+  ports:
+{{- range $port := $service.ports }}
+    - port: {{ $port.port }}
+      targetPort: {{ $port.targetPort }}
+{{- if $port.protocol }}
+      protocol: {{ $port.protocol }}
+{{- end }}
+{{- end }}
+  type: {{ $service.type }}
+{{- if hasKey $service "clusterIP" }}
+  clusterIP: {{ $service.clusterIP }}
+{{- end }}
+{{- end -}}
+
+{{- define "smart-parking.renderServiceWithPreview" -}}
+{{ include "smart-parking.renderService" . }}
+{{- $root := .root -}}
+{{- if and $root.Values.rollout $root.Values.rollout.enabled }}
+---
+{{ include "smart-parking.renderPreviewService" . }}
 {{- end }}
 {{- end -}}
 

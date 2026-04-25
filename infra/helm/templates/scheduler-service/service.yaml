@@ -1,3 +1,3 @@
 {{- if .Values.schedulerService.enabled }}
-{{ include "smart-parking.renderService" (dict "root" . "service" .Values.schedulerService.service) }}
+{{ include "smart-parking.renderServiceWithPreview" (dict "root" . "service" .Values.schedulerService.service) }}
 {{- end }}
