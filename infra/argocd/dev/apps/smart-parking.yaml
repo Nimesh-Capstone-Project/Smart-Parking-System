@@ -1,17 +1,24 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: smart-parking-dev
+  name: smart-parking-dev-services
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/Nimesh-Capstone-Project/Smart-Parking-System.git
     targetRevision: master
-    path: infra/argocd/dev/apps
+    path: infra/helm
+    helm:
+      values: |
+        namespace: dev
+        environment: dev
+        mongo:
+          storageClass:
+            enabled: false
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: dev
   syncPolicy:
     automated:
       prune: true

@@ -1,17 +1,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: smart-parking-app-of-apps
+  name: smart-parking-prod-services
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/Nimesh-Capstone-Project/Smart-Parking-System.git
     targetRevision: master
-    path: infra/argocd/apps
+    path: infra/helm
+    helm:
+      values: |
+        namespace: prod
+        environment: prod
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: prod
   syncPolicy:
     automated:
       prune: true
