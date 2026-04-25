@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/Nimesh-Capstone-Project/Smart-Parking-System.git
     targetRevision: master
-    path: infra/argocd/prod
+    path: infra/argocd/prod/apps
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
@@ -18,4 +18,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-

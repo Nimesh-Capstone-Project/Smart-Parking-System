@@ -1,0 +1,45 @@
+{{- $namespace := default .Release.Namespace .Values.namespace -}}
+{{- $deployment := .Values.parkingService.deployment -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $deployment.name }}
+  namespace: {{ $namespace }}
+spec:
+  replicas: {{ $deployment.replicas }}
+  selector:
+    matchLabels:
+{{ toYaml $deployment.selectorLabels | nindent 6 }}
+  strategy:
+{{ toYaml $deployment.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+{{ toYaml $deployment.podLabels | nindent 8 }}
+    spec:
+      containers:
+{{- range $container := $deployment.containers }}
+        - name: {{ $container.name }}
+          image: {{ if $container.image.tag }}{{ printf "%s:%s" $container.image.repository $container.image.tag }}{{ else }}{{ $container.image.repository }}{{ end }}
+{{- if $container.ports }}
+          ports:
+{{- range $port := $container.ports }}
+            - containerPort: {{ $port.containerPort }}
+{{- end }}
+{{- end }}
+{{- if $container.envFromConfigMaps }}
+          envFrom:
+{{- range $configMapName := $container.envFromConfigMaps }}
+            - configMapRef:
+                name: {{ $configMapName }}
+{{- end }}
+{{- end }}
+{{- if $container.resources }}
+          resources:
+{{ toYaml $container.resources | nindent 12 }}
+{{- end }}
+{{- if $container.volumeMounts }}
+          volumeMounts:
+{{ toYaml $container.volumeMounts | nindent 12 }}
+{{- end }}
+{{- end }}

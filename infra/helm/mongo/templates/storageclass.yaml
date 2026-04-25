@@ -1,7 +1,0 @@
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: {{ .Values.storageClass.name }}
-provisioner: {{ .Values.storageClass.provisioner }}
-parameters:
-{{ toYaml .Values.storageClass.parameters | nindent 2 }}

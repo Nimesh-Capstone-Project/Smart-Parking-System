@@ -1,0 +1,11 @@
+{{- $namespace := default .Release.Namespace .Values.namespace -}}
+{{- $gateway := .Values.gatewayApi.gateway -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ $gateway.name }}
+  namespace: {{ $namespace }}
+spec:
+  gatewayClassName: {{ $gateway.gatewayClassName }}
+  listeners:
+{{ toYaml $gateway.listeners | nindent 4 }}

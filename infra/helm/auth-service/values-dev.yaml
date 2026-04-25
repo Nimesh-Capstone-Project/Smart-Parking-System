@@ -1,4 +1,0 @@
-namespace: dev
-
-deployment:
-  replicas: 1

@@ -1,0 +1,22 @@
+{{- $namespace := default .Release.Namespace .Values.namespace -}}
+{{- $service := .Values.mongo.service -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service.name }}
+  namespace: {{ $namespace }}
+spec:
+  selector:
+{{ toYaml $service.selectorLabels | nindent 4 }}
+  ports:
+{{- range $port := $service.ports }}
+    - port: {{ $port.port }}
+      targetPort: {{ $port.targetPort }}
+{{- if $port.protocol }}
+      protocol: {{ $port.protocol }}
+{{- end }}
+{{- end }}
+  type: {{ $service.type }}
+{{- if hasKey $service "clusterIP" }}
+  clusterIP: {{ $service.clusterIP }}
+{{- end }}

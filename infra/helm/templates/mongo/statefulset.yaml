@@ -1,0 +1,40 @@
+{{- $namespace := default .Release.Namespace .Values.namespace -}}
+{{- $statefulSet := .Values.mongo.statefulSet -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $statefulSet.name }}
+  namespace: {{ $namespace }}
+spec:
+  replicas: {{ $statefulSet.replicas }}
+  minReadySeconds: {{ $statefulSet.minReadySeconds }}
+  selector:
+    matchLabels:
+{{ toYaml $statefulSet.selectorLabels | nindent 6 }}
+  template:
+    metadata:
+      labels:
+{{ toYaml $statefulSet.podLabels | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: {{ $statefulSet.terminationGracePeriodSeconds }}
+      containers:
+{{- range $container := $statefulSet.containers }}
+        - name: {{ $container.name }}
+          image: {{ if $container.image.tag }}{{ printf "%s:%s" $container.image.repository $container.image.tag }}{{ else }}{{ $container.image.repository }}{{ end }}
+{{- if $container.ports }}
+          ports:
+{{- range $port := $container.ports }}
+            - containerPort: {{ $port.containerPort }}
+{{- end }}
+{{- end }}
+{{- if $container.resources }}
+          resources:
+{{ toYaml $container.resources | nindent 12 }}
+{{- end }}
+{{- if $container.volumeMounts }}
+          volumeMounts:
+{{ toYaml $container.volumeMounts | nindent 12 }}
+{{- end }}
+{{- end }}
+  volumeClaimTemplates:
+{{ toYaml $statefulSet.volumeClaimTemplates | nindent 4 }}

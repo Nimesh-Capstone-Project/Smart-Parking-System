@@ -1,0 +1,8 @@
+{{- $namespace := default .Release.Namespace .Values.namespace -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.schedulerService.configMap.name }}
+  namespace: {{ $namespace }}
+data:
+{{ toYaml .Values.schedulerService.configMap.data | nindent 2 }}

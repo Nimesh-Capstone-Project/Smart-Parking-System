@@ -1,0 +1,8 @@
+{{- $namespace := default .Release.Namespace .Values.namespace -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.authService.configMap.name }}
+  namespace: {{ $namespace }}
+data:
+{{ toYaml .Values.authService.configMap.data | nindent 2 }}
