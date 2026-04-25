@@ -1,0 +1,4 @@
+namespace: prod
+
+deployment:
+  replicas: 2

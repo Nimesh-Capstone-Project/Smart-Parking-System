@@ -1,3 +1,0 @@
-{{- if .Values.frontend.enabled }}
-{{ include "smart-parking.renderConfigMap" (dict "root" . "configMap" .Values.frontend.configMap) }}
-{{- end }}

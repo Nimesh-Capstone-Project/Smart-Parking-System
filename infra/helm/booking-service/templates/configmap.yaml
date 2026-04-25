@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMap.name }}
+  namespace: {{ include "booking-service.namespace" . }}
+data:
+{{ toYaml .Values.configMap.data | nindent 2 }}

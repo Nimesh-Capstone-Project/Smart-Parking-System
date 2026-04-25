@@ -1,0 +1,4 @@
+namespace: dev
+
+statefulSet:
+  replicas: 1

@@ -1,0 +1,55 @@
+namespace: sps-ns
+
+storageClass:
+  name: storage
+  provisioner: nfs.csi.k8s.io
+  parameters:
+    server: 172.31.28.137
+    share: /var/nfs/general/Smart-Parking
+
+statefulSet:
+  name: mongo-deploy
+  replicas: 2
+  minReadySeconds: 10
+  selectorLabels:
+    app: sps-mongo
+  podLabels:
+    app: sps-mongo
+  terminationGracePeriodSeconds: 10
+  containers:
+    - name: mongodb-cont
+      image:
+        repository: mongo
+        tag: ""
+      ports:
+        - containerPort: 27017
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "256Mi"
+        limits:
+          cpu: "200m"
+          memory: "512Mi"
+      volumeMounts:
+        - name: mongo-vct
+          mountPath: /data/db
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-vct
+      spec:
+        accessModes:
+          - ReadWriteMany
+        storageClassName: storage
+        resources:
+          requests:
+            storage: 2Gi
+
+service:
+  name: mongo-svc
+  selectorLabels:
+    app: sps-mongo
+  ports:
+    - port: 27017
+      targetPort: 27017
+  type: ClusterIP
+  clusterIP: None

@@ -1,3 +1,0 @@
-{{- if and .Values.mongo.enabled .Values.mongo.storageClass.enabled }}
-{{ include "smart-parking.renderStorageClass" (dict "storageClass" .Values.mongo.storageClass) }}
-{{- end }}

@@ -1,3 +1,0 @@
-{{- if .Values.gatewayApi.httpRoute.enabled }}
-{{ include "smart-parking.renderHTTPRoute" (dict "root" . "httpRoute" .Values.gatewayApi.httpRoute) }}
-{{- end }}

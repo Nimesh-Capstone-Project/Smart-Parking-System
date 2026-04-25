@@ -1,0 +1,4 @@
+namespace: prod
+
+statefulSet:
+  replicas: 2

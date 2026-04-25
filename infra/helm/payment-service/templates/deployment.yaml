@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.name }}
+  namespace: {{ include "payment-service.namespace" . }}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+{{ toYaml .Values.deployment.selectorLabels | nindent 6 }}
+  strategy:
+{{ toYaml .Values.deployment.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+{{ toYaml .Values.deployment.podLabels | nindent 8 }}
+    spec:
+      containers:
+{{- range .Values.deployment.containers }}
+        - name: {{ .name }}
+          image: {{ include "payment-service.image" .image }}
+{{- if .ports }}
+          ports:
+{{- range .ports }}
+            - containerPort: {{ .containerPort }}
+{{- end }}
+{{- end }}
+{{- if .envFromConfigMaps }}
+          envFrom:
+{{- range .envFromConfigMaps }}
+            - configMapRef:
+                name: {{ . }}
+{{- end }}
+{{- end }}
+{{- if .resources }}
+          resources:
+{{ toYaml .resources | nindent 12 }}
+{{- end }}
+{{- if .volumeMounts }}
+          volumeMounts:
+{{ toYaml .volumeMounts | nindent 12 }}
+{{- end }}
+{{- end }}

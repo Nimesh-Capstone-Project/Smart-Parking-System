@@ -1,0 +1,91 @@
+namespace: sps-ns
+
+gateway:
+  name: sps-gateway
+  gatewayClassName: kgateway
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+
+httpRoute:
+  name: sps-route
+  parentRefs:
+    - name: sps-gateway
+      sectionName: http
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /auth
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: auth-service
+          port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /parking
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: parking-service
+          port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /booking
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: booking-service
+          port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /payment
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: payment-service
+          port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /notification
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: notification-service
+          port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: frontend-svc
+          port: 80

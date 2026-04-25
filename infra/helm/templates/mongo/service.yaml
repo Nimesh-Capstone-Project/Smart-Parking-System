@@ -1,3 +1,0 @@
-{{- if .Values.mongo.enabled }}
-{{ include "smart-parking.renderService" (dict "root" . "service" .Values.mongo.service) }}
-{{- end }}
